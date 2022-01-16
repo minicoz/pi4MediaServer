@@ -1,0 +1,179 @@
+---
+version: "2"
+services:
+  emby:
+    image: linuxserver/emby
+    container_name: emby
+    environment:
+      - PUID=998
+      - PGID=100
+      - TZ=America/Chicago
+      - UMASK_SET=022 #optional
+    volumes:
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Configs/Emby:/config
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/TvShows:/data/tvshows
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Movies:/data/movies
+    ports:
+      - 8096:8096
+      - 8920:8920 #optional for secure connections
+    restart: unless-stopped
+    
+  embystat:
+    image: ghcr.io/linuxserver/embystat
+    container_name: embystat
+    environment:
+      - PUID=998
+      - PGID=100
+      - TZ=America/Chicago
+    volumes:
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Configs/EmbyStat:/config
+    ports:
+      - 6555:6555
+    restart: unless-stopped
+    
+  jackett:
+    image: linuxserver/jackett
+    container_name: jackett
+    environment:
+      - PUID=998
+      - PGID=100
+      - TZ=America/Chicago
+    volumes:
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Configs/Jackett:/config
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Torrents:/downloads
+    ports:
+      - 9117:9117
+    restart: unless-stopped
+    
+  organizr:
+    container_name: organizr
+    hostname: organizr
+    image: organizr/organizr
+    restart: unless-stopped
+    ports:
+        - 90:80
+    volumes:
+        - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Configs/Organizr:/config
+    environment:
+        - fpm=true #true or false | using true will provide better performance
+        - branch=v2-master #v2-master or #v2-develop
+        - PUID=998
+        - PGID=100
+        - TZ=America/Chicago
+    
+  qbittorrentvpn:
+    image: chrisjohnson00/qbittorrent-openvpn
+    container_name: qbittorrentvpn
+    privileged: true   
+    environment:
+      - VPN_USERNAME=********
+      - VPN_PASSWORD=********
+      - PUID=998
+      - PGID=100
+      - WEBUI_PORT_ENV=8080
+      - INCOMING_PORT_ENV=8999
+      - VPN_ENABLED=yes
+      - LAN_NETWORK=192.168.1.0/24 #adjust this to YOUR network settings
+      - NAME_SERVERS=1.1.1.1 #you can use whatever DNS provider you want
+    ports:
+      - 8080:8080
+      - 8999:8999
+      - 8999:8999/udp
+    volumes:
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Configs/QBittorrentVPN:/config
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Torrents:/downloads
+      - /etc/timezone:/etc/timezone:ro #This is for TimeZone
+    restart: unless-stopped
+    
+  radarr:
+    image: linuxserver/radarr
+    container_name: radarr
+    environment:
+      - PUID=998
+      - PGID=100
+      - TZ=America/Chicago
+      - UMASK_SET=022 #optional
+    volumes:
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Configs/Radarr:/config
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Downloads:/NZBdownloads
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Movies:/movies
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Torrents:/downloads
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+    
+  sabnzbd:
+    image: ghcr.io/linuxserver/sabnzbd
+    container_name: sabnzbd
+    environment:
+      - PUID=998
+      - PGID=100
+      - TZ=America/Chicago
+    volumes:
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Configs/Sabnzbd:/config
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Downloads:/NZBdownloads
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Downloads/Incomplete:/incomplete-downloads #optional
+    ports:
+      - 8181:8080
+      - 9191:9090
+    restart: unless-stopped
+    
+  sonarr:
+    image: linuxserver/sonarr
+    container_name: sonarr
+    environment:
+      - PUID=998
+      - PGID=100
+      - TZ=America/Chicago
+      - UMASK_SET=022
+    volumes:
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Configs/Sonarr:/config
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Downloads:/NZBdownloads
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/TvShows:/tv
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Torrents:/downloads
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+
+## System Monitoring
+
+  prometheus:
+      image: prom/prometheus
+      container_name: prometheus
+      environment:
+        - PUID=998
+        - PGID=100
+        - TZ=America/Chicago
+        - UMASK_SET=022
+      volumes:
+        - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Configs/Prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      ports:
+        - 9292:9090
+      restart: unless-stopped
+
+  node-exporter:
+      image: quay.io/prometheus/node-exporter:latest
+      container_name: node-exporter
+      network_mode: host
+      environment:
+        - PUID=998
+        - PGID=100
+        - TZ=America/Chicago
+        - UMASK_SET=022
+      volumes:
+        - /:/host:ro,rslave
+      ports:
+        - 9100:9090
+      restart: unless-stopped
+    
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    environment:
+      - PUID=998
+      - PGID=100
+      - TZ=America/Chicago
+      - UMASK_SET=022
+    ports:
+      - 3000:3000
+    restart: unless-stopped
