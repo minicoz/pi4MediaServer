@@ -13,6 +13,7 @@ services:
       - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Configs/Emby:/config
       - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/TvShows:/data/tvshows
       - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Movies:/data/movies
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Music:/data/music
     ports:
       - 8096:8096
       - 8920:8920 #optional for secure connections
@@ -66,7 +67,7 @@ services:
     container_name: qbittorrentvpn
     privileged: true   
     environment:
-      - VPN_USERNAME=********
+      - VPN_USERNAME=*******
       - VPN_PASSWORD=********
       - PUID=998
       - PGID=100
@@ -133,6 +134,23 @@ services:
       - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Torrents:/downloads
     ports:
       - 8989:8989
+    restart: unless-stopped
+    
+  lidarr:
+    image: lscr.io/linuxserver/lidarr
+    container_name: lidarr
+    environment:
+      - PUID=998
+      - PGID=100
+      - TZ=America/Chicago
+      - UMASK_SET=022
+    volumes:
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Configs/Lidarr:/config
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Downloads:/NZBdownloads
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Music:/music
+      - /srv/dev-disk-by-uuid-a55985e6-994d-496e-8779-4dbd3cbb2d51/Torrents:/downloads
+    ports:
+      - 8686:8686
     restart: unless-stopped
 
 ## System Monitoring
